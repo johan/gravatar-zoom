@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gravatar Zoom
 // @icon        128.png
-// @version     1.0
+// @version     1.1
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -43,8 +43,8 @@ function init() {
 
       , base_url = i.src.split('?')[0]
       , query    = unparam(i.src.replace(/^[^?]*\??/, '?'))
-      , size     = Number(query.s || 80)
-      , refetch  = (size < DONT_ZOOM) && (query.s = ZOOM_SIZE) &&
+      , size     = Number(query.size || query.s || 80)
+      , refetch  = (size < DONT_ZOOM) && (query.size = ZOOM_SIZE) &&
                      base_url +'?'+ $.param(query)
       , zoom_sz  = refetch ? ZOOM_SIZE : size
       ;
