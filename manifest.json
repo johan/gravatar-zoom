@@ -1,0 +1,25 @@
+{ "version": "1.0"
+, "manifest_version": 2
+, "name": "Gravatar Zoom"
+, "homepage_url": "https://github.com/johan/gravatar-zoom/"
+, "description": "Hover gravatar images anywhere on the web to zoom them up."
+, "icons":
+  { "16": "16.png"
+  , "48": "48.png"
+  , "128":"128.png"
+  }
+, "content_scripts":
+  [ { "matches":
+      [ "http://*/*"
+      , "https://*/*"
+      ]
+    , "js":
+      [ "jquery-1.7.2.min.js"
+      , "gravatar-zoom.user.js"
+      ]
+    , "run_at": "document_end"
+    , "all_frames": true
+    }
+  ]
+, "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHm5r3Gmfd/byShEqzoqviKdCLqD9ot+CtCIQf1GRI8SgM5qONU7UxaYEEcQot7vVsq82kJ89vitMKRNf44wOVJtgAcrt3O02zsIngndApOSx6YIOlKfTHHesqYtPOXC9/Wm/l+wrWG8+gO04zJyUNTJQNJQzViJ8JU3kmbQ4LdQIDAQAB"
+}
