@@ -1,0 +1,6 @@
+*.oex
+*.crx
+*.pem
+*.zip
+build
+.DS_Store
