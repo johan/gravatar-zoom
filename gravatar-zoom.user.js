@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gravatar Zoom
 // @icon        128.png
-// @version     1.1
+// @version     1.2
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -90,6 +90,8 @@ function init() {
                              , outline: $i.css('outline')
                              , position: 'absolute'
                              , 'z-index': 2147483646
+                             , 'max-width': ZOOM_SIZE +'px'
+                             , 'max-height': ZOOM_SIZE +'px'
                              }, css || {}));
     }
     ++count;
