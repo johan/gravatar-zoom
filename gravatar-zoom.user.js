@@ -85,6 +85,7 @@ function init() {
     function move(css) {
       return $z.css($.extend({ top: i.offsetTop +'px'
                              , left: i.offsetLeft +'px'
+                             , margin: 0
                              , border: $i.css('border')
                              , padding: $i.css('padding')
                              , outline: $i.css('outline')
