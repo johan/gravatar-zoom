@@ -62,6 +62,11 @@ function init() {
       }
       $z.hide().appendTo(p);
       move().show();
+
+      // while we're animating our copy, hide the original, which might shine
+      // through in transparent spots:
+      $(this).css('opacity', '0');
+
       // animate:
       $z.css({ top: (i.offsetTop - delta) +'px'
              , left: (i.offsetLeft - delta) +'px'
@@ -74,11 +79,12 @@ function init() {
       move({ width: w +'px'
            , height: h +'px'
            })
-        .one(ANIM_DONE, remove);
+        .one(ANIM_DONE, remove.bind(this));
     }
 
     function remove() {
       $z.remove();
+      $(this).css('opacity', '');
     }
 
     // moves the zoom node to wherever the gravatar is now + mirrors its looks
