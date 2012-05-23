@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gravatar Zoom
 // @icon        128.png
-// @version     1.5
+// @version     1.6
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -38,7 +38,7 @@ function init() {
       , h = i.height
 
       , $i = $(i)
-      , $z = $(i.cloneNode(false)).addClass('gravazoom').css(getViewOffset(i))
+      , $z = $(i.cloneNode(false)).addClass('gravazoom')
 
       , base_url = i.src.split('?')[0]
       , query    = unparam(i.src.replace(/^[^?]*\??/, '?'))
@@ -52,35 +52,34 @@ function init() {
     $i.mouseenter(grow)
       .mouseleave(shrink);
 
+    // TODO: bound coords and max size to fit document boundaries?
     function grow() {
-      var delta = (zoom_sz - Math.min(size, w)) >> 1
-        , style = getViewOffset(i)
+      var delta  = -((zoom_sz - Math.min(size, w)) >> 1)
+        , margin = delta +'px 0 0 '+ delta +'px'
         ;
       if (refetch) { // didn't already have a large size loaded
         $z.attr('src', refetch);
         refetch = false;
       }
       $z.hide().appendTo(document.body);
-      move().show();
-
-      // TODO: bound coords and max size to fit document boundaries?
-      style.top -= delta;
-      style.left -= delta;
+      move(getViewOffset(i)).show();
 
       // while we're animating our copy, hide the original, which might shine
       // through in transparent spots:
       $(this).css('opacity', '0');
 
       // animate:
-      $z.css($.extend({ width: zoom_sz +'px'
-                      , height: zoom_sz +'px'
-                      }, style));
+      $z.css({ width: zoom_sz +'px'
+             , height: zoom_sz +'px'
+             , margin: margin
+             });
     }
 
     function shrink() {
-      move($.extend({ width: w +'px'
-                    , height: h +'px'
-                    }, getViewOffset(i)))
+      move({ width: w +'px'
+           , height: h +'px'
+           , margin: '0px 0 0 0px'
+           })
         .one(ANIM_DONE, remove.bind(this));
     }
 
@@ -91,10 +90,7 @@ function init() {
 
     // moves the zoom node to wherever the gravatar is now + mirrors its looks
     function move(css) {
-      return $z.css($.extend({ top: i.offsetTop +'px'
-                             , left: i.offsetLeft +'px'
-                             , margin: 0
-                             , border: $i.css('border')
+      return $z.css($.extend({ border: $i.css('border')
                              , padding: $i.css('padding')
                              , outline: $i.css('outline')
                              , position: 'absolute'
