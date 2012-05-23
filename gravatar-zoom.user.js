@@ -13,7 +13,9 @@
 var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
   , DONT_ZOOM   = 128 // already loaded >= DONT_ZOOM images don't need zooming
   , ZOOM_SIZE   = 512
-  , IS_GRAVATAR = /^[^\/]*\/\/([^\/]*\.)?gravatar\.com\/avatar\/[0-9a-f]{32}/
+  , IS_GRAVATAR = new RegExp( '^[^/]*//(?:(?:[^/]*\\.)?gravatar\\.com/avatar'
+                            +         '|.*/wp-content/gravatars/global'
+                            +         ')/[0-9a-f]{32}')
   , UA          = navigator.userAgent
   , ANIM_DONE   = /WebKit/.test(UA) ? 'webkitTransitionEnd' :
                   /opera/i.test(UA) ? 'oTransitionEnd' : 'transitionend' // Fx
@@ -29,9 +31,9 @@ function prefix_rule(rule) {
 function init() {
   var count = 0;
 
-  $('img[src*="gravatar.com/avatar/"]').each(function zoom_on_hover(n) {
-    if (this.width >= DONT_ZOOM ||
-        !IS_GRAVATAR.test(this.src)) return;
+  $( 'img[src*="/wp-content/gravatars/global/"],'
+   + 'img[src*="gravatar.com/avatar/"]').each(function zoom_on_hover(n) {
+    if (this.width >= DONT_ZOOM || !IS_GRAVATAR.test(this.src)) return;
 
     var i = this
       , w = i.width
