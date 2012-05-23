@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gravatar Zoom
 // @icon        128.png
-// @version     1.3
+// @version     1.4
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -34,7 +34,6 @@ function init() {
         !IS_GRAVATAR.test(this.src)) return;
 
     var i = this
-      , p = i.offsetParent
       , w = i.width
       , h = i.height
 
@@ -55,24 +54,27 @@ function init() {
 
     function grow() {
       var delta = (zoom_sz - Math.min(size, w)) >> 1
+        , style = getViewOffset(i)
         ;
       if (refetch) { // didn't already have a large size loaded
         $z.attr('src', refetch);
         refetch = false;
       }
-      $z.hide().appendTo(p);
+      $z.hide().appendTo(document.body);
       move().show();
+
+      // TODO: bound coords and max size to fit document boundaries?
+      style.top -= delta;
+      style.left -= delta;
 
       // while we're animating our copy, hide the original, which might shine
       // through in transparent spots:
       $(this).css('opacity', '0');
 
       // animate:
-      $z.css({ top: (i.offsetTop - delta) +'px'
-             , left: (i.offsetLeft - delta) +'px'
-             , width: zoom_sz +'px'
-             , height: zoom_sz +'px'
-             });
+      $z.css($.extend({ width: zoom_sz +'px'
+                      , height: zoom_sz +'px'
+                      }, style));
     }
 
     function shrink() {
@@ -124,4 +126,66 @@ function unparam(str, alt) {
     empty      = false;
   });
   return empty && 'undefined' !== typeof alt ? alt : data;
+}
+
+function getViewOffset(node) {
+  var x = 0, y = 0, win = node.ownerDocument.defaultView;
+  if (node) addOffset(node);
+  return { top: y, left: x };
+
+  function addOffset(node) {
+    var p = node.offsetParent, style, X, Y, name;
+    x += parseInt(node.offsetLeft, 10) || 0;
+    y += parseInt(node.offsetTop, 10) || 0;
+
+    if (p) {
+      x -= parseInt(p.scrollLeft, 10) || 0;
+      y -= parseInt(p.scrollTop, 10) || 0;
+
+      if (p.nodeType == 1) {
+        var parentStyle = win.getComputedStyle(p, '')
+          , localName   = p.localName
+          , parent      = node.parentNode;
+        if (parentStyle.position != 'static') {
+          x += parseInt(parentStyle.borderLeftWidth, 10) || 0;
+          y += parseInt(parentStyle.borderTopWidth, 10) || 0;
+
+          if (localName == 'TABLE') {
+            x += parseInt(parentStyle.paddingLeft, 10) || 0;
+            y += parseInt(parentStyle.paddingTop, 10) || 0;
+          }
+          else if (localName == 'BODY') {
+            style = win.getComputedStyle(node, '');
+            x += parseInt(style.marginLeft, 10) || 0;
+            y += parseInt(style.marginTop, 10) || 0;
+          }
+        }
+        else if (localName == 'BODY') {
+          x += parseInt(parentStyle.borderLeftWidth, 10) || 0;
+          y += parseInt(parentStyle.borderTopWidth, 10) || 0;
+        }
+
+        while (p != parent) {
+          x -= parseInt(parent.scrollLeft, 10) || 0;
+          y -= parseInt(parent.scrollTop, 10) || 0;
+          parent = parent.parentNode;
+        }
+        addOffset(p, win);
+      }
+    }
+    else {
+      if (node.localName == 'BODY') {
+        style = win.getComputedStyle(node, '');
+        x += parseInt(style.borderLeftWidth, 10) || 0;
+        y += parseInt(style.borderTopWidth, 10) || 0;
+
+        var htmlStyle = win.getComputedStyle(node.parentNode, '');
+        x -= parseInt(htmlStyle.paddingLeft, 10) || 0;
+        y -= parseInt(htmlStyle.paddingTop, 10) || 0;
+      }
+
+      if ((X = node.scrollLeft)) x += parseInt(X, 10) || 0;
+      if ((Y = node.scrollTop))  y += parseInt(Y, 10) || 0;
+    }
+  }
 }
