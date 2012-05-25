@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gravatar Zoom
 // @icon        128.png
-// @version     1.6
+// @version     1.7
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -12,7 +12,7 @@
 
 var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
   , DONT_ZOOM   = 128 // already loaded >= DONT_ZOOM images don't need zooming
-  , ZOOM_SIZE   = 512
+  , ZOOM_SIZE   = 140 // up to 512 supported; github's all 140 for pre-caching
   , IS_GRAVATAR = new RegExp( '^[^/]*//(?:(?:[^/]*\\.)?gravatar\\.com/avatar'
                             +         '|.*/wp-content/gravatars/global'
                             +         ')/[0-9a-f]{32}')
