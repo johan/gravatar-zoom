@@ -21,8 +21,13 @@ var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
                   /opera/i.test(UA) ? 'oTransitionEnd' : 'transitionend' // Fx
   ;
 
-// we want a guarantee that all gravatars are loaded before we peek at them
-$(window).load(init);
+// We want a guarantee that all gravatars are loaded before we peek at them,
+// and that we do actually run if the `load` event has already fired.
+if (document.readyState == "complete") {
+  init();
+} else {
+  $(window).load(init);
+}
 
 function prefix_rule(rule) {
   return PREFIXES.map(function(browser) { return browser + rule; }).join('');
