@@ -12,12 +12,12 @@
   [ { "matches":
       [ "http://*/*"
       , "https://*/*"
+      , "file:///*"
       ]
     , "js":
       [ "jquery-1.7.2.min.js"
       , "gravatar-zoom.user.js"
       ]
-    , "run_at": "document_end"
     , "all_frames": true
     }
   ]

@@ -5,9 +5,9 @@
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
-// @run-at      document-end
 // @match       https://*/*
 // @match       http://*/*
+// @match       file:///*
 // ==/UserScript==
 
 var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
@@ -21,13 +21,11 @@ var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
                   /opera/i.test(UA) ? 'oTransitionEnd' : 'transitionend' // Fx
   ;
 
-// We want a guarantee that all gravatars are loaded before we peek at them,
-// and that we do actually run if the `load` event has already fired.
-if (document.readyState == "complete") {
+// wait until all gravatars are loaded, as @run-at window-load doesn't exist
+if ('complete' === document.readyState)
   init();
-} else {
+else
   $(window).load(init);
-}
 
 function prefix_rule(rule) {
   return PREFIXES.map(function(browser) { return browser + rule; }).join('');
