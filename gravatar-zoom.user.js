@@ -11,7 +11,6 @@
 // ==/UserScript==
 
 var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
-  , DONT_ZOOM   = 128 // already loaded >= DONT_ZOOM images don't need zooming
   , ZOOM_SIZE   = 140 // up to 512 supported; github's all 140 for pre-caching
   , IS_GRAVATAR = new RegExp( '^[^/]*//(?:(?:[^/]*\\.)?gravatar\\.com/avatar'
                             +         '|.*/wp-content/gravatars/global'
@@ -36,7 +35,7 @@ function init() {
 
   $( 'img[src*="/wp-content/gravatars/global/"],'
    + 'img[src*="gravatar.com/avatar/"]').each(function zoom_on_hover(n) {
-    if (this.width >= DONT_ZOOM || !IS_GRAVATAR.test(this.src)) return;
+    if (this.width >= ZOOM_SIZE || !IS_GRAVATAR.test(this.src)) return;
 
     var i = this
       , w = i.width
@@ -48,7 +47,7 @@ function init() {
       , base_url = i.src.split('?')[0]
       , query    = unparam(i.src.replace(/^[^?]*\??/, '?'))
       , size     = Number(query.size || query.s || 80)
-      , refetch  = (size < DONT_ZOOM) && (query.size = ZOOM_SIZE) &&
+      , refetch  = (size < ZOOM_SIZE) && (query.size = ZOOM_SIZE) &&
                      base_url +'?'+ $.param(query)
       , zoom_sz  = refetch ? ZOOM_SIZE : size
       ;
