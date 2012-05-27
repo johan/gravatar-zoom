@@ -56,15 +56,14 @@ function init() {
     $i.mouseenter(grow)
       .mouseleave(shrink);
 
-    // TODO: bound coords and max size to fit document boundaries?
     function grow() {
-      var max_dx = (zoom_sz - w) >> 1 // margin to zoomed-in edges from original
-        , coords = getViewOffset(i)
-        , x0     = coords.left, xm = innerWidth  - x0 + w // margin to window in
-        , y0     = coords.top,  ym = innerHeight - y0 + h // all four directions
+      var coords = getViewOffset(i)
+        , max_dx = (zoom_sz - w) >> 1 // margin to zoomed-in edges from original
+        , x0     = coords.left, xm = $(document).width()  - x0 + w // ditto doc.
+        , y0     = coords.top,  ym = $(document).height() - y0 + h // outer edge
         , cap_at = Math.min(x0, y0, xm, ym) // don't extend outside of window
         , delta  = -Math.min(cap_at, max_dx)
-        , zoom_w = zoom_sz - (max_dx - cap_at) * 2
+        , zoom_w = zoom_sz - (max_dx > cap_at ? max_dx - cap_at : 0) * 2
         , margin = delta +'px 0 0 '+ delta +'px'
         ;
       if (refetch) { // didn't already have a large size loaded
