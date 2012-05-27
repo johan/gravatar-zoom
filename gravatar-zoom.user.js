@@ -46,10 +46,10 @@ function init() {
 
       , base_url = i.src.split('?')[0]
       , query    = unparam(i.src.replace(/^[^?]*\??/, '?'))
-      , size     = Number(query.size || query.s || 80)
-      , refetch  = (size < ZOOM_SIZE) && (query.size = ZOOM_SIZE) &&
+      , img_size = Number(query.size || query.s || 80)
+      , refetch  = (img_size < ZOOM_SIZE) && (query.size = ZOOM_SIZE) &&
                      base_url +'?'+ $.param(query)
-      , zoom_sz  = refetch ? ZOOM_SIZE : size
+      , zoom_sz  = refetch ? ZOOM_SIZE : img_size
       ;
 
     // when the original gravatar is (un)hovered, (un)zoom our $z replica
@@ -58,7 +58,13 @@ function init() {
 
     // TODO: bound coords and max size to fit document boundaries?
     function grow() {
-      var delta  = -((zoom_sz - Math.min(size, w)) >> 1)
+      var max_dx = (zoom_sz - w) >> 1 // margin to zoomed-in edges from original
+        , coords = getViewOffset(i)
+        , x0     = coords.left, xm = innerWidth  - x0 + w // margin to window in
+        , y0     = coords.top,  ym = innerHeight - y0 + h // all four directions
+        , cap_at = Math.min(x0, y0, xm, ym) // don't extend outside of window
+        , delta  = -Math.min(cap_at, max_dx)
+        , zoom_w = zoom_sz - (max_dx - cap_at) * 2
         , margin = delta +'px 0 0 '+ delta +'px'
         ;
       if (refetch) { // didn't already have a large size loaded
@@ -66,15 +72,15 @@ function init() {
         refetch = false;
       }
       $z.hide().appendTo(document.body);
-      move(getViewOffset(i)).show();
+      move(coords).show();
 
       // while we're animating our copy, hide the original, which might shine
       // through in transparent spots:
       $(this).css('opacity', '0');
 
       // animate:
-      $z.css({ width: zoom_sz +'px'
-             , height: zoom_sz +'px'
+      $z.css({ width: zoom_w +'px'
+             , height: zoom_w +'px'
              , margin: margin
              });
     }
