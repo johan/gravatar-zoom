@@ -65,6 +65,7 @@ function init() {
         , delta  = -Math.min(cap_at, max_dx)
         , zoom_w = zoom_sz - (max_dx > cap_at ? max_dx - cap_at : 0) * 2
         , margin = delta +'px 0 0 '+ delta +'px'
+        , b_rad  = parseInt($i.css('border-radius'), 10)
         ;
       if (refetch) { // didn't already have a large size loaded
         $z.attr('src', refetch);
@@ -81,6 +82,7 @@ function init() {
       $z.css({ width: zoom_w +'px'
              , height: zoom_w +'px'
              , margin: margin
+             , 'border-radius': Math.round(b_rad * (zoom_w / w))
              });
     }
 
@@ -106,6 +108,7 @@ function init() {
                              , 'z-index': 2147483646
                              , 'max-width': ZOOM_SIZE +'px'
                              , 'max-height': ZOOM_SIZE +'px'
+                             , 'border-radius': $i.css('border-radius')
                              }, css || {}));
     }
     ++count;
