@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Gravatar Zoom
 // @icon        128.png
-// @version     1.8
+// @version     1.9
 // @namespace   https://github.com/johan/
 // @description Hover gravatar images anywhere on the web to zoom them up.
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js
@@ -12,7 +12,8 @@
 
 var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
   , ZOOM_SIZE   = 140 // up to 512 supported; github's all 140 for pre-caching
-  , IS_GRAVATAR = new RegExp( '^[^/]*//(?:(?:[^/]*\\.)?gravatar\\.com/avatar'
+  , IS_GRAVATAR = new RegExp( '^[^/]*//(?:(?:[^/]*\\.)?gravatar\\.com/'
+                            +            '(?:avatar|userimage/\\d+)'
                             +         '|.*/wp-content/gravatars/global'
                             +         ')/[0-9a-f]{32}')
   , UA          = navigator.userAgent
@@ -31,10 +32,12 @@ function prefix_rule(rule) {
 }
 
 function init() {
-  var count = 0;
+  var host  = /(^|\.)gravatar\.com$/.test(location.hostname) ? '':'gravatar.com'
+    , count = 0;
 
   $( 'img[src*="/wp-content/gravatars/global/"],'
-   + 'img[src*="gravatar.com/avatar/"]').each(function zoom_on_hover(n) {
+   + 'img[src*="'+ host +'/userimage/"],'
+   + 'img[src*="'+ host +'/avatar/"]').each(function zoom_on_hover(n) {
     if (this.width >= ZOOM_SIZE || !IS_GRAVATAR.test(this.src)) return;
 
     var i = this
