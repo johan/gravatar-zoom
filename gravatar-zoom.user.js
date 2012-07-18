@@ -11,6 +11,7 @@
 // ==/UserScript==
 
 var PREFIXES    = ['', '-webkit-', '-moz-', '-o-', '-ms-']
+  , HOSTNAME    = location.hostname
   , ZOOM_SIZE   = 140 // up to 512 supported; github's all 140 for pre-caching
   , IS_GRAVATAR = new RegExp( '^[^/]*//(?:(?:[^/]*\\.)?gravatar\\.com/'
                             +            '(?:avatar|userimage/\\d+)'
@@ -32,97 +33,99 @@ function prefix_rule(rule) {
 }
 
 function init() {
-  var host  = /(^|\.)gravatar\.com$/.test(location.hostname) ? '':'gravatar.com'
-    , count = 0;
+  var host = /(^|\.)gravatar\.com$/.test(HOSTNAME) ? HOSTNAME : 'gravatar.com'
+    ;
 
-  $( 'img[src*="/wp-content/gravatars/global/"],'
-   + 'img[src*="'+ host +'/userimage/"],'
-   + 'img[src*="'+ host +'/avatar/"]').each(function zoom_on_hover(n) {
-    if (this.width >= ZOOM_SIZE || !IS_GRAVATAR.test(this.src)) return;
+  $( 'img:not(.gravatar-zoom)[src*="/wp-content/gravatars/global/"],'
+   + 'img:not(.gravatar-zoom)[src*="'+ host +'/userimage/"],'
+   + 'img:not(.gravatar-zoom)[src*="'+ host +'/avatar/"]'
+   ).live('mouseenter.gravatar-zoom', zoom_on_hover);
 
-    var i = this
-      , w = i.width
-      , h = i.height
+  $( '<style>.gravatar-zoom { '
+   + prefix_rule('pointer-events: none; ')
+   + prefix_rule('transition: .125s all linear; ')
+   + '}</style>'
+   ).appendTo('head');
+}
 
-      , $i = $(i)
-      , $z = $(i.cloneNode(false)).addClass('gravazoom')
+function zoom_on_hover(e) {
+  if (this.width >= ZOOM_SIZE || !IS_GRAVATAR.test(this.src)) return;
 
-      , base_url = i.src.split('?')[0]
-      , query    = unparam(i.src.replace(/^[^?]*\??/, '?'))
-      , img_size = Number(query.size || query.s || 80)
-      , refetch  = (img_size < ZOOM_SIZE) && (query.size = ZOOM_SIZE) &&
-                     base_url +'?'+ $.param(query)
-      , zoom_sz  = refetch ? ZOOM_SIZE : img_size
+  var i = this
+    , w = i.width
+    , h = i.height
+
+    , $i = $(i)
+    , $z = $(i.cloneNode(false)).addClass('gravatar-zoom')
+
+    , base_url = i.src.split('?')[0]
+    , query    = unparam(i.src.replace(/^[^?]*\??/, '?'))
+    , img_size = Number(query.size || query.s || 80)
+    , refetch  = (img_size < ZOOM_SIZE) && (query.size = ZOOM_SIZE) &&
+                   base_url +'?'+ $.param(query)
+    , zoom_sz  = refetch ? ZOOM_SIZE : img_size
+    ;
+
+  grow();
+
+  // when the original gravatar is unhovered, unzoom our $z replica
+  $i.one('mouseleave.gravatar-zoom', shrink);
+
+  function grow() {
+    var coords = getViewOffset(i)
+      , max_dx = (zoom_sz - w) >> 1 // margin to zoomed-in edges from original
+      , x0     = coords.left, xm = $(document).width()  - x0 + w // ditto doc.
+      , y0     = coords.top,  ym = $(document).height() - y0 + h // outer edge
+      , cap_at = Math.min(x0, y0, xm, ym) // don't extend outside of window
+      , delta  = -Math.min(cap_at, max_dx)
+      , zoom_w = zoom_sz - (max_dx > cap_at ? max_dx - cap_at : 0) * 2
+      , margin = delta +'px 0 0 '+ delta +'px'
+      , b_rad  = parseInt($i.css('border-radius'), 10)
       ;
-
-    // when the original gravatar is (un)hovered, (un)zoom our $z replica
-    $i.mouseenter(grow)
-      .mouseleave(shrink);
-
-    function grow() {
-      var coords = getViewOffset(i)
-        , max_dx = (zoom_sz - w) >> 1 // margin to zoomed-in edges from original
-        , x0     = coords.left, xm = $(document).width()  - x0 + w // ditto doc.
-        , y0     = coords.top,  ym = $(document).height() - y0 + h // outer edge
-        , cap_at = Math.min(x0, y0, xm, ym) // don't extend outside of window
-        , delta  = -Math.min(cap_at, max_dx)
-        , zoom_w = zoom_sz - (max_dx > cap_at ? max_dx - cap_at : 0) * 2
-        , margin = delta +'px 0 0 '+ delta +'px'
-        , b_rad  = parseInt($i.css('border-radius'), 10)
-        ;
-      if (refetch) { // didn't already have a large size loaded
-        $z.attr('src', refetch);
-        refetch = false;
-      }
-      $z.hide().appendTo(document.body);
-      move(coords).show();
-
-      // while we're animating our copy, hide the original, which might shine
-      // through in transparent spots:
-      $(this).css('opacity', '0');
-
-      // animate:
-      $z.css({ width: zoom_w +'px'
-             , height: zoom_w +'px'
-             , margin: margin
-             , 'border-radius': Math.round(b_rad * (zoom_w / w))
-             });
+    if (refetch) { // didn't already have a large size loaded
+      $z.attr('src', refetch);
+      refetch = false;
     }
+    $z.hide().appendTo(document.body);
+    move(coords).show();
 
-    function shrink() {
-      move({ width: w +'px'
-           , height: h +'px'
-           , margin: '0px 0 0 0px'
-           })
-        .one(ANIM_DONE, remove.bind(this));
-    }
+    // while we're animating our copy, hide the original, which might shine
+    // through in transparent spots:
+    $(this).css('opacity', '0');
 
-    function remove() {
-      $z.remove();
-      $(this).css('opacity', '');
-    }
+    // animate:
+    $z.css({ width: zoom_w +'px'
+           , height: zoom_w +'px'
+           , margin: margin
+           , 'border-radius': Math.round(b_rad * (zoom_w / w))
+           });
+  }
 
-    // moves the zoom node to wherever the gravatar is now + mirrors its looks
-    function move(css) {
-      return $z.css($.extend({ border: $i.css('border')
-                             , padding: $i.css('padding')
-                             , outline: $i.css('outline')
-                             , position: 'absolute'
-                             , 'z-index': 2147483646
-                             , 'max-width': ZOOM_SIZE +'px'
-                             , 'max-height': ZOOM_SIZE +'px'
-                             , 'border-radius': $i.css('border-radius')
-                             }, css || {}));
-    }
-    ++count;
-  });
+  function shrink() {
+    move({ width: w +'px'
+         , height: h +'px'
+         , margin: '0px 0 0 0px'
+         })
+      .one(ANIM_DONE, remove.bind(this));
+  }
 
-  if (count)
-    $( '<style>.gravazoom { '
-     + prefix_rule('pointer-events: none; ')
-     + prefix_rule('transition: .125s all linear; ')
-     + '}</style>'
-     ).appendTo('head');
+  function remove() {
+    $z.remove();
+    $(this).css('opacity', '');
+  }
+
+  // moves the zoom node to wherever the gravatar is now + mirrors its looks
+  function move(css) {
+    return $z.css($.extend({ border: $i.css('border')
+                           , padding: $i.css('padding')
+                           , outline: $i.css('outline')
+                           , position: 'absolute'
+                           , 'z-index': 2147483646
+                           , 'max-width': ZOOM_SIZE +'px'
+                           , 'max-height': ZOOM_SIZE +'px'
+                           , 'border-radius': $i.css('border-radius')
+                           }, css || {}));
+  }
 }
 
 function unparam(str, alt) {
